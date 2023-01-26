@@ -11,6 +11,13 @@ export default class DB {
   posts = new DBPosts();
 
   constructor() {
+  // const user = this.users.create({
+  //   firstName: 'Vasyan',
+  //   lastName: 'Pupkin',
+  //   email: 'vasyan@gmail.com',
+  // });
+  // console.log('🚀 user:', user);
+
     const deepCopyResultTrap: ProxyHandler<any> = {
       get: (target, prop) => {
         if (typeof target[prop] === 'function') {
