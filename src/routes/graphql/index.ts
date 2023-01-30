@@ -2,10 +2,14 @@ import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-sc
 import { graphql } from 'graphql';
 import { gqlSchema } from './graphql-schema';
 import { graphqlBodySchema } from './schema';
+import { createLoaders } from './types/dataloaders/load';
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
 ): Promise<void> => {
+
+  const postsLoader = await createLoaders(fastify);
+
   fastify.post(
     '/',
     {
@@ -19,7 +23,10 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
       return await graphql({
         schema: gqlSchema,
         source: query!,
-        contextValue: fastify,
+        contextValue: {
+          fastify,
+          postsLoader,
+        },
         variableValues: variables,
       });
     }

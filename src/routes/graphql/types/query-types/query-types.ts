@@ -11,26 +11,26 @@ export const queryType = new GraphQLObjectType({
   fields: () => ({
     users: {
       type: new GraphQLList(UserType),
-      resolve: async (_source: unknown, _args: unknown, context: FastifyInstance) => {
-        return await context.db.users.findMany();
+      resolve: async (_source: unknown, _args: unknown, { fastify }: { fastify: FastifyInstance}) => {
+        return await fastify.db.users.findMany();
       },
     },
     posts: {
       type: new GraphQLList(PostType),
-      resolve: async (_source: unknown, _args: unknown, context: FastifyInstance) => {
-        return await context.db.posts.findMany();
+      resolve: async (_source: unknown, _args: unknown, { fastify }: { fastify: FastifyInstance}) => {
+        return await fastify.db.posts.findMany();
       },
     },
     profiles: {
       type: new GraphQLList(ProfileType),
-      resolve: async (_source: unknown, _args: unknown, context: FastifyInstance) => {
-        return await context.db.profiles.findMany();
+      resolve: async (_source: unknown, _args: unknown, { fastify }: { fastify: FastifyInstance}) => {
+        return await fastify.db.profiles.findMany();
       },
     },
     memberTypes: {
       type: new GraphQLList(TypeOfMemberType),
-      resolve: async (_source: unknown, _args: unknown, context: FastifyInstance) => {
-        return await context.db.memberTypes.findMany();
+      resolve: async (_source: unknown, _args: unknown, { fastify }: { fastify: FastifyInstance}) => {
+        return await fastify.db.memberTypes.findMany();
       },
     },
 
@@ -44,8 +44,8 @@ export const queryType = new GraphQLObjectType({
           type: GraphQLID,
         },
       },
-      resolve: async (_source: unknown, { id }: Id, context: FastifyInstance) => {
-        const user = await context.db.users.findOne({ key: 'id', equals: id });
+      resolve: async (_source: unknown, { id }: Id, { fastify }: { fastify: FastifyInstance}) => {
+        const user = await fastify.db.users.findOne({ key: 'id', equals: id });
         if (!user) throw new Error(`User with id ${id} not found`);
         return user;
       },
@@ -58,8 +58,8 @@ export const queryType = new GraphQLObjectType({
           type: GraphQLID,
         },
       },
-      resolve: async (_source: unknown, { id }: Id, context: FastifyInstance) => {
-        const post = await context.db.posts.findOne({ key: 'id', equals: id });
+      resolve: async (_source: unknown, { id }: Id, { fastify }: { fastify: FastifyInstance}) => {
+        const post = await fastify.db.posts.findOne({ key: 'id', equals: id });
         if (!post) throw new Error(`Post with id ${id} not found`);
         return post;
       },
@@ -72,8 +72,9 @@ export const queryType = new GraphQLObjectType({
           type: GraphQLID,
         },
       },
-      resolve: async (_source: unknown, { id }: Id, context: FastifyInstance) => {
-        const porfile = await context.db.profiles.findOne({ key: 'id', equals: id });
+      resolve: async (_source: unknown, { id }: Id, { fastify }: { fastify: FastifyInstance}) => {
+
+        const porfile = await fastify.db.profiles.findOne({ key: 'id', equals: id });
         if (!porfile) throw new Error(`Porfile with id ${id} not found`);
         return porfile;
       },
@@ -86,8 +87,8 @@ export const queryType = new GraphQLObjectType({
           type: GraphQLString,
         },
       },
-      resolve: async (_source: unknown, { id }: Id, context: FastifyInstance) => {
-        const memberType = await context.db.memberTypes.findOne({ key: 'id', equals: id });
+      resolve: async (_source: unknown, { id }: Id, { fastify }: { fastify: FastifyInstance}) => {
+        const memberType = await fastify.db.memberTypes.findOne({ key: 'id', equals: id });
         if (!memberType) throw new Error(`MemberType with id ${id} not found`);
         return memberType;
       },

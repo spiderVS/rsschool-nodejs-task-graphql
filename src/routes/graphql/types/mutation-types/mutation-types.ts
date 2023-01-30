@@ -27,8 +27,8 @@ export const mutationType = new GraphQLObjectType({
           type: UserCreateInputType,
         },
       },
-      resolve: async (_source: unknown, { input }: { input: CreateUserDTO }, context: FastifyInstance) => ({
-        user: await context.db.users.create(input),
+      resolve: async (_source: unknown, { input }: { input: CreateUserDTO }, { fastify }: { fastify: FastifyInstance}) => ({
+        user: await fastify.db.users.create(input),
       }),
     },
     userUpdate: {
@@ -45,13 +45,13 @@ export const mutationType = new GraphQLObjectType({
       resolve: async (
         _source: unknown,
         { id, input }: { id: string; input: ChangeUserDTO },
-        context: FastifyInstance
+        { fastify }: { fastify: FastifyInstance}
       ) => {
-        const user = await context.db.users.findOne({ key: 'id', equals: id });
+        const user = await fastify.db.users.findOne({ key: 'id', equals: id });
         if (!user) {
           throw new Error(`User with id ${id} does not exist`);
         }
-        return { user: await context.db.users.change(id, input) };
+        return { user: await fastify.db.users.change(id, input) };
       },
     },
 
@@ -62,13 +62,13 @@ export const mutationType = new GraphQLObjectType({
           type: PostCreateInputType,
         },
       },
-      resolve: async (_source: unknown, { input }: { input: CreatePostDTO }, context: FastifyInstance) => {
+      resolve: async (_source: unknown, { input }: { input: CreatePostDTO }, { fastify }: { fastify: FastifyInstance}) => {
         const { userId } = input;
-        const isUserExist = !!(await context.db.users.findOne({ key: 'id', equals: userId }));
+        const isUserExist = !!(await fastify.db.users.findOne({ key: 'id', equals: userId }));
         if (!isUserExist) {
           throw new Error(`User with userId ${userId} does not exist`);
         }
-        return { post: await context.db.posts.create(input) };
+        return { post: await fastify.db.posts.create(input) };
       },
     },
     postUpdate: {
@@ -85,13 +85,13 @@ export const mutationType = new GraphQLObjectType({
       resolve: async (
         _source: unknown,
         { id, input }: { id: string; input: ChangePostDTO },
-        context: FastifyInstance
+        { fastify }: { fastify: FastifyInstance}
       ) => {
-        const post = await context.db.posts.findOne({ key: 'id', equals: id });
+        const post = await fastify.db.posts.findOne({ key: 'id', equals: id });
         if (!post) {
           throw new Error(`Post with id ${id} does not exist`);
         }
-        return { post: await context.db.posts.change(id, input) };
+        return { post: await fastify.db.posts.change(id, input) };
       },
     },
 
@@ -102,13 +102,13 @@ export const mutationType = new GraphQLObjectType({
           type: ProfileCreateInputType,
         },
       },
-      resolve: async (_source: unknown, { input }: { input: CreateProfileDTO }, context: FastifyInstance) => {
+      resolve: async (_source: unknown, { input }: { input: CreateProfileDTO }, { fastify }: { fastify: FastifyInstance}) => {
         const { userId } = input;
         const { memberTypeId } = input;
-        const isUserExist = !!(await context.db.users.findOne({ key: 'id', equals: userId }));
-        const isMemberTypeExist = !!(await context.db.memberTypes.findOne({ key: 'id', equals: memberTypeId }));
+        const isUserExist = !!(await fastify.db.users.findOne({ key: 'id', equals: userId }));
+        const isMemberTypeExist = !!(await fastify.db.memberTypes.findOne({ key: 'id', equals: memberTypeId }));
 
-        const isUserProfileAlreadyExist = !!(await context.db.profiles.findOne({ key: 'userId', equals: userId }));
+        const isUserProfileAlreadyExist = !!(await fastify.db.profiles.findOne({ key: 'userId', equals: userId }));
 
         if (!isUserExist) {
           throw new Error(`User with userId ${userId} does not exist`);
@@ -117,7 +117,7 @@ export const mutationType = new GraphQLObjectType({
         } else if (isUserProfileAlreadyExist) {
           throw new Error(`User profile already exist`);
         }
-        return { profile: await context.db.profiles.create(input) };
+        return { profile: await fastify.db.profiles.create(input) };
       },
     },
     profileUpdate: {
@@ -134,13 +134,13 @@ export const mutationType = new GraphQLObjectType({
       resolve: async (
         _source: unknown,
         { id, input }: { id: string; input: ChangeProfileDTO },
-        context: FastifyInstance
+        { fastify }: { fastify: FastifyInstance}
       ) => {
-        const foundProfile = await context.db.profiles.findOne({ key: 'id', equals: id });
+        const foundProfile = await fastify.db.profiles.findOne({ key: 'id', equals: id });
         if (!foundProfile) {
           throw new Error(`Profile with id ${id} does not exist`);
         }
-        return { profile: await context.db.profiles.change(id, input) };
+        return { profile: await fastify.db.profiles.change(id, input) };
       },
     },
 
@@ -158,13 +158,13 @@ export const mutationType = new GraphQLObjectType({
       resolve: async (
         _source: unknown,
         { id, input }: { id: string; input: ChangeMemberTypeDTO },
-        context: FastifyInstance
+        { fastify }: { fastify: FastifyInstance}
       ) => {
-        const memberType = await context.db.memberTypes.findOne({ key: 'id', equals: id });
+        const memberType = await fastify.db.memberTypes.findOne({ key: 'id', equals: id });
         if (!memberType) {
           throw new Error(`MemberType with id ${id} does not exist`);
         }
-        return { memberType: await context.db.memberTypes.change(id, input) };
+        return { memberType: await fastify.db.memberTypes.change(id, input) };
       },
     },
 
@@ -182,11 +182,11 @@ export const mutationType = new GraphQLObjectType({
       resolve: async (
         _source: unknown,
         { id, input }: { id: string; input: { userId: string } },
-        context: FastifyInstance
+        { fastify }: { fastify: FastifyInstance}
       ) => {
         const { userId } = input;
-        const subscribeToUser = await context.db.users.findOne({ key: 'id', equals: userId });
-        const subscribingUser = await context.db.users.findOne({ key: 'id', equals: id });
+        const subscribeToUser = await fastify.db.users.findOne({ key: 'id', equals: userId });
+        const subscribingUser = await fastify.db.users.findOne({ key: 'id', equals: id });
 
         if (!subscribeToUser) {
           throw new Error(`User for subscribe with id ${userId} does not exist`);
@@ -198,7 +198,7 @@ export const mutationType = new GraphQLObjectType({
           throw new Error(`User with id ${id} already subscribed`);
         }
         subscribeToUser.subscribedToUserIds.push(id);
-        return { subscribeTo: await context.db.users.change(userId, subscribeToUser) };
+        return { subscribeTo: await fastify.db.users.change(userId, subscribeToUser) };
       },
     },
     unsubscribeFrom: {
@@ -215,11 +215,11 @@ export const mutationType = new GraphQLObjectType({
       resolve: async (
         _source: unknown,
         { id, input }: { id: string; input: { userId: string } },
-        context: FastifyInstance
+        { fastify }: { fastify: FastifyInstance}
       ) => {
         const { userId } = input;
-        const unsubscribeFromUser = await context.db.users.findOne({ key: 'id', equals: userId });
-        const unsubscribingUser = await context.db.users.findOne({ key: 'id', equals: id });
+        const unsubscribeFromUser = await fastify.db.users.findOne({ key: 'id', equals: userId });
+        const unsubscribingUser = await fastify.db.users.findOne({ key: 'id', equals: id });
         if (!unsubscribeFromUser) {
           throw new Error(`User for unsubscribe with id ${userId} does not exist`);
         } else if (!unsubscribingUser) {
@@ -230,7 +230,7 @@ export const mutationType = new GraphQLObjectType({
           throw new Error(`User with id ${id} not subscribed to user with id ${userId}`);
         }
         unsubscribeFromUser.subscribedToUserIds.splice(idx, 1);
-        return { unsubscribeFrom: await context.db.users.change(userId, unsubscribeFromUser) };
+        return { unsubscribeFrom: await fastify.db.users.change(userId, unsubscribeFromUser) };
       },
     },
   }),
