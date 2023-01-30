@@ -3,7 +3,7 @@ import DBPosts from './entities/DBPosts';
 import DBProfiles from './entities/DBProfiles';
 import DBUsers from './entities/DBUsers';
 import * as lodash from 'lodash';
-// import { createFakeEntities } from '../db_init_helper/createFakeEntities';
+
 export default class DB {
   users = new DBUsers();
   profiles = new DBProfiles();
@@ -11,12 +11,8 @@ export default class DB {
   posts = new DBPosts();
 
   constructor() {
-
-  //  createFakeEntities(this.users, this.posts, this.profiles, this.memberTypes);
-
     const deepCopyResultTrap: ProxyHandler<any> = {
       get: (target, prop) => {
-        // console.log('DB request:', prop)
         if (typeof target[prop] === 'function') {
           return (...args: any[]) => {
             const result = target[prop](...args);
