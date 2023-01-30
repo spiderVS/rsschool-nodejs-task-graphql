@@ -8,5 +8,13 @@ export const createLoaders = async (fi: FastifyInstance) => {
     return ids.map((id: string) => posts.filter((post) => post.userId === id));
   };
 
-  return new DataLoader(batchGetPostsByUserId);
+  const batchGetProfilesByUserId = async (ids: any) => {
+    const profiles = await fi.db.profiles.findMany({ key: 'userId', equalsAnyOf: ids });
+    return ids.map((id: string) => profiles.find((profile) => profile.userId === id) ?? null);
+  }
+
+  const postsDataloader = new DataLoader(batchGetPostsByUserId);
+  const profilesDataloader = new DataLoader(batchGetProfilesByUserId);
+
+  return { postsDataloader, profilesDataloader };
 }

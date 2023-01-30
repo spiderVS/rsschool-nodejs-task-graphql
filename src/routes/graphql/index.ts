@@ -9,7 +9,7 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
 ): Promise<void> => {
 
-  const postsLoader = await createLoaders(fastify);
+  const { postsDataloader, profilesDataloader } = await createLoaders(fastify);
 
   fastify.post(
     '/',
@@ -39,7 +39,8 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
           source: query!,
           contextValue: {
             fastify,
-            postsLoader,
+            postsDataloader,
+            profilesDataloader,
           },
           variableValues: variables,
         });

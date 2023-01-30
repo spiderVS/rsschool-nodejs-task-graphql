@@ -22,17 +22,41 @@ const UserType: GraphQLObjectType<any, any> = new GraphQLObjectType({
     subscribedToUserIds: { type: new GraphQLList(GraphQLID) },
     posts: {
       type: new GraphQLList(PostType),
-      resolve: async (source: UserEntity, args: unknown, { fastify, postsLoader }: { fastify: FastifyInstance, postsLoader: DataLoader<any, any, any>}) => {
+      resolve: async (
+        source: UserEntity,
+        args: unknown,
+        {
+          fastify,
+          postsDataloader,
+          profilesDataloader
+        }: {
+          fastify: FastifyInstance;
+          postsDataloader: DataLoader<any, any, any>;
+          profilesDataloader: DataLoader<any, any, any>;
+        }
+      ) => {
         const { id } = source;
-        const userPosts = await postsLoader.load(id);
+        const userPosts = await postsDataloader.load(id);
         return userPosts;
       },
     },
     profile: {
       type: ProfileType,
-      resolve: async (source: UserEntity, args: unknown, { fastify }: { fastify: FastifyInstance}) => {
+      resolve: async (
+        source: UserEntity,
+        args: unknown,
+        {
+          fastify,
+          postsDataloader,
+          profilesDataloader,
+        }: {
+          fastify: FastifyInstance;
+          postsDataloader: DataLoader<any, any, any>;
+          profilesDataloader: DataLoader<any, any, any>;
+        }
+      ) => {
         const { id } = source;
-        const userProfile = await fastify.db.profiles.findOne({ key: 'userId', equals: id });
+        const userProfile = await profilesDataloader.load(id);
         if (!userProfile) {
           throw new Error(`Profile of user id ${id} not found`);
         }
@@ -41,7 +65,7 @@ const UserType: GraphQLObjectType<any, any> = new GraphQLObjectType({
     },
     memberType: {
       type: TypeOfMemberType,
-      resolve: async (source: UserEntity, args: unknown, { fastify }: { fastify: FastifyInstance}) => {
+      resolve: async (source: UserEntity, args: unknown, { fastify }: { fastify: FastifyInstance }) => {
         const { id } = source;
         const userProfile = await fastify.db.profiles.findOne({ key: 'userId', equals: id });
         if (!userProfile) {
@@ -57,7 +81,7 @@ const UserType: GraphQLObjectType<any, any> = new GraphQLObjectType({
     },
     userSubscribedTo: {
       type: new GraphQLList(UserType),
-      resolve: async (source: UserEntity, args: unknown, { fastify }: { fastify: FastifyInstance}) => {
+      resolve: async (source: UserEntity, args: unknown, { fastify }: { fastify: FastifyInstance }) => {
         const { id } = source;
         return await fastify.db.users.findMany({ key: 'subscribedToUserIds', inArray: id });
       },
@@ -66,8 +90,8 @@ const UserType: GraphQLObjectType<any, any> = new GraphQLObjectType({
       type: new GraphQLList(UserType),
       resolve: async (source: UserEntity, args: unknown, { fastify }: { fastify: FastifyInstance }) => {
         const { subscribedToUserIds } = source;
-        return await fastify.db.users.findMany({key: 'id', equalsAnyOf: subscribedToUserIds });
-      }
+        return await fastify.db.users.findMany({ key: 'id', equalsAnyOf: subscribedToUserIds });
+      },
     },
   }),
 });
