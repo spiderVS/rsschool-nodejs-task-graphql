@@ -12,6 +12,13 @@ import { UserEntity } from '../../../../utils/DB/entities/DBUsers';
 
 import * as DataLoader from 'dataloader';
 
+type Context = {
+  fastify: FastifyInstance;
+  postsDataloader: DataLoader<any, any, any>;
+  profilesDataloader: DataLoader<any, any, any>;
+  memberTypesDataloader: DataLoader<any, any, any>;
+};
+
 const UserType: GraphQLObjectType<any, any> = new GraphQLObjectType({
   name: 'User',
   fields: () => ({
@@ -22,19 +29,8 @@ const UserType: GraphQLObjectType<any, any> = new GraphQLObjectType({
     subscribedToUserIds: { type: new GraphQLList(GraphQLID) },
     posts: {
       type: new GraphQLList(PostType),
-      resolve: async (
-        source: UserEntity,
-        args: unknown,
-        {
-          fastify,
-          postsDataloader,
-          profilesDataloader
-        }: {
-          fastify: FastifyInstance;
-          postsDataloader: DataLoader<any, any, any>;
-          profilesDataloader: DataLoader<any, any, any>;
-        }
-      ) => {
+      resolve: async (source: UserEntity, args: unknown, context: Context) => {
+        const { postsDataloader } = context;
         const { id } = source;
         const userPosts = await postsDataloader.load(id);
         return userPosts;
@@ -42,19 +38,8 @@ const UserType: GraphQLObjectType<any, any> = new GraphQLObjectType({
     },
     profile: {
       type: ProfileType,
-      resolve: async (
-        source: UserEntity,
-        args: unknown,
-        {
-          fastify,
-          postsDataloader,
-          profilesDataloader,
-        }: {
-          fastify: FastifyInstance;
-          postsDataloader: DataLoader<any, any, any>;
-          profilesDataloader: DataLoader<any, any, any>;
-        }
-      ) => {
+      resolve: async (source: UserEntity, args: unknown, context: Context) => {
+        const { profilesDataloader } = context;
         const { id } = source;
         const userProfile = await profilesDataloader.load(id);
         if (!userProfile) {
@@ -65,14 +50,15 @@ const UserType: GraphQLObjectType<any, any> = new GraphQLObjectType({
     },
     memberType: {
       type: TypeOfMemberType,
-      resolve: async (source: UserEntity, args: unknown, { fastify }: { fastify: FastifyInstance }) => {
+      resolve: async (source: UserEntity, args: unknown, context: Context) => {
+        const { profilesDataloader, memberTypesDataloader } = context;
         const { id } = source;
-        const userProfile = await fastify.db.profiles.findOne({ key: 'userId', equals: id });
+        const userProfile = await profilesDataloader.load(id);
         if (!userProfile) {
           throw new Error(`Profile of user id ${id} not found`);
         }
         const { memberTypeId } = userProfile;
-        const userMemberType = await fastify.db.memberTypes.findOne({ key: 'id', equals: memberTypeId });
+        const userMemberType = await memberTypesDataloader.load(memberTypeId);
         if (!userMemberType) {
           throw new Error(`MemberType of user id ${id} not found`);
         }
@@ -81,7 +67,8 @@ const UserType: GraphQLObjectType<any, any> = new GraphQLObjectType({
     },
     userSubscribedTo: {
       type: new GraphQLList(UserType),
-      resolve: async (source: UserEntity, args: unknown, { fastify }: { fastify: FastifyInstance }) => {
+      resolve: async (source: UserEntity, args: unknown, context: Context) => {
+        const { fastify } = context;
         const { id } = source;
         return await fastify.db.users.findMany({ key: 'subscribedToUserIds', inArray: id });
       },
