@@ -3,6 +3,7 @@ import { graphql } from 'graphql';
 import { gqlSchema } from './graphql-schema';
 import { graphqlBodySchema } from './schema';
 import { createLoaders } from './types/dataloaders/load';
+import { depthLimiteValidate } from './validators/depthLimit';
 
 const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify
@@ -20,15 +21,28 @@ const plugin: FastifyPluginAsyncJsonSchemaToTs = async (
     async function (request, reply) {
       const { body: { query, variables } } = request;
 
-      return await graphql({
-        schema: gqlSchema,
-        source: query!,
-        contextValue: {
-          fastify,
-          postsLoader,
-        },
-        variableValues: variables,
-      });
+      const depthLimitError = depthLimiteValidate(query!, gqlSchema, 6);
+
+      if (depthLimitError) {
+        return {
+          errors: [
+            {
+              message: depthLimitError.message,
+              locations: depthLimitError.locations,
+            },
+          ],
+        }
+      }
+
+        return await graphql({
+          schema: gqlSchema,
+          source: query!,
+          contextValue: {
+            fastify,
+            postsLoader,
+          },
+          variableValues: variables,
+        });
     }
   );
 };
